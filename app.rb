@@ -30,6 +30,10 @@ end
 
 template :form do
   <<-HAML
+%ol
+  %li Text is transferred from your browser over an encrypted connection
+  %li On the server the text is encrypted using the recipient's public pgp key (so only they can decrypt it)
+  %li The encrypted data is emailed to the recipient
 %form{:method => 'post', :action => '/deliver'}
   %p
     %label{:for => 'to'} Deliver To:
@@ -51,13 +55,17 @@ get '/' do
 end
 
 post '/deliver' do
-  io = IO.popen("gpg -er '#{params['to']}'", "r+")
-  io.puts params[:secrets]
-  io.close_write
-  to = params['to'].match(/<(.*)>/)[1] #extract email address
-  ApplicationMailer.deliver_secret(params['to'], io)
-  io.close_read
-  redirect "/success/#{to}"
+  if params[:to].blank? or params[:secrets].blank?
+    haml '%h3 Please specify recipient and secrets'
+  else 
+    io = IO.popen("gpg -er '#{params['to']}'", "r+")
+    io.puts params[:secrets]
+    io.close_write
+    to = params['to'].match(/<(.*)>/)[1] #extract email address
+    ApplicationMailer.deliver_secret(params['to'], io)
+    io.close_read
+    redirect "/success/#{to}"
+  end
 end
 
 get '/success/:to' do
