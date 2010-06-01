@@ -60,7 +60,7 @@ class ApplicationMailer < ActionMailer::Base
     ].join("\n")
 
     attachment "application/pgp-encrypted" do |a|
-      a.filename = filename || "secrets.#{Time.now.to_i}.gpg"
+      a.filename = filename + '.gpg' || "secrets.#{Time.now.to_i}.gpg"
       a.body = io.inject{|m,s| m << s}
     end
   end
