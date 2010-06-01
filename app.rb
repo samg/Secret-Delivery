@@ -44,7 +44,7 @@ class ApplicationMailer < ActionMailer::Base
     body            ["someone has sent you some secrets", "Use gpg key #{to.inspect} to decrypt it", "\n", cleartext].join("\n")
 
     attachment "application/pgp-encrypted" do |a|
-      a.filename = filename || "secrets.#{Time.now.to_i}.gpg"
+      a.filename = filename + '.gpg' || "secrets.#{Time.now.to_i}.gpg"
       a.body = io.inject{|m,s| m << s}
     end
   end
