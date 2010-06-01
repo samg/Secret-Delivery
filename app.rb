@@ -41,7 +41,14 @@ class ApplicationMailer < ActionMailer::Base
     recipients      to
     subject         "Secrets"
     from            "secrets@#{`hostname`}"
-    body            ["someone has sent you some secrets", "Use gpg key #{to.inspect} to decrypt it", "\n", cleartext].join("\n")
+    body            [
+      "someone has sent you some secrets",
+      "Use gpg key #{to.inspect} to decrypt it",
+      "\n",
+      "cleartext message",
+      "========================================",
+      cleartext
+    ].join("\n")
 
     attachment "application/pgp-encrypted" do |a|
       a.filename = filename || "secrets.#{Time.now.to_i}.gpg"
