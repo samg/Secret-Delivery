@@ -14,10 +14,10 @@ get '/' do
 end
 
 post '/deliver' do
-  # validation 
+  # validation
   if params[:to].blank? or params[:secrets].blank?
     haml '%h3 Please specify recipient and secrets'
-  else 
+  else
     # reject blank params
     params.each { |k,v| params.delete(k) if v.blank? }
 
@@ -35,6 +35,15 @@ get '/success/:to' do
   haml "%h1 Success\n%p Your secrets have been transmitted to #{params[:to].inspect}\n%p\n  %a{:href => '/'} Again"
 end
 
+get '/import' do
+  haml :import_form
+end
+
+post '/import' do
+  keys = system 'gpg', '--recv-keys', params[:keyid]
+  redirect '/'
+end
+
 ActionMailer::Base.delivery_method = :sendmail
 class ApplicationMailer < ActionMailer::Base
   def secret(to, cleartext, filename, io)
@@ -45,7 +54,7 @@ class ApplicationMailer < ActionMailer::Base
       "someone has sent you some secrets",
       "Use gpg key #{to.inspect} to decrypt it",
       "\n",
-      "cleartext message",
+      "This clear text message was written for you by the sender of this message",
       "========================================",
       cleartext
     ].join("\n")
@@ -56,6 +65,7 @@ class ApplicationMailer < ActionMailer::Base
     end
   end
 end
+
 
 
 template :layout do
@@ -84,13 +94,20 @@ template :form do
   %li Text is transferred from your browser over an encrypted connection (if it says https in your address bar)
   %li On the server the text is encrypted using the recipient's public pgp key (so only they can decrypt it)
   %li The encrypted data is emailed to the recipient
+%p
+  For questions about this app email Sam Goldstein at
+  %a{:href => 'mailto:sgrock@gmail.com'} sgrock@gmail.com
 %form{:method => 'post', :action => '/deliver'}
   %p
-    %label{:for => 'to'} Deliver To:
+    %label{:for => 'to'}
+      Deliver To:
     %select{:id => 'to', :name => 'to'}
       -keys.unshift('').each do |k|
         %option{:value => k}
           = h k
+    (
+    %a{:href => '/import'} Import another key
+    )
   %p
     %label{:style => 'color:blue;', :for => 'secrets'} Secrets (encrypted):
     %textarea{:style => 'border:1px solid blue;', :name => 'secrets'}
@@ -104,4 +121,27 @@ template :form do
     %input{:type => 'submit', :value => 'Send Secrets'}
   HAML
 end
+
+template :import_form do
+  <<-HAML
+%form{:method => 'post', :action => '/import'}
+  %p{:style => 'font-weight:bold'}
+    Find your key on a keyserver such as
+    %a{:href => 'http://pgp.mit.edu:11371/'} http://pgp.mit.edu:11371/
+  %p{:style => 'font-weight:bold'}
+    Find its id (it will look something like "5B8CD968")
+  %p{:style => 'font-weight:bold'}
+    Paste that id into this form
+  %p
+    %label{:for => 'keyid'} Key Id:
+    %input{:type => 'text', :name => 'keyid'}
+  %p
+    %input{:type => 'submit', :value => 'Import Key'}
+  %p
+    %pre
+      = `gpg --list-keys`
+  HAML
+end
+
+
 
