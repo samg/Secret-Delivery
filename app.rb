@@ -9,8 +9,7 @@ helpers do
 end
 
 get '/' do
-  keys = `gpg --list-keys`
-  haml :form, :locals => {:keys => keys.grep(/uid/).map{|s| s.gsub(/uid\s*/, '')}}
+  haml :form, :locals => {:keys => uids}
 end
 
 post '/deliver' do
@@ -20,12 +19,13 @@ post '/deliver' do
   else
     # reject blank params
     params.each { |k,v| params.delete(k) if v.blank? }
+    recipient_user_id = uids.detect{|key| key =~ /#{params['to']}/}
 
-    io = IO.popen("gpg -e --trust-model always -r '#{params['to']}'", "r+")
+    io = IO.popen("gpg -e --armor --trust-model always -r '#{recipient_user_id}'"r+")
     io.puts params[:secrets]
     io.close_write
     to = params['to'].match(/<(.*)>/)[1] #extract email address
-    ApplicationMailer.deliver_secret(params['to'], params[:cleartext], params[:filename] , io)
+    ApplicationMailer.deliver_secret(params['to'], params[:cleartext], io)
     io.close_read
     redirect "/success/#{to}"
   end
@@ -49,6 +49,12 @@ post '/import' do
   redirect '/'
 end
 
+helpers do
+  def uids
+    `gpg --list-keys`.grep(/uid/).map{|s| s.gsub(/uid\s*/, '')}
+  end
+end
+
 ActionMailer::Base.delivery_method = :sendmail
 class ApplicationMailer < ActionMailer::Base
   def secret(to, cleartext, filename, io)
@@ -59,15 +65,14 @@ class ApplicationMailer < ActionMailer::Base
       "someone has sent you some secrets through http://secrets.drasticcode.com",
       "Use gpg key #{to.inspect} to decrypt it",
       "\n",
-      "This clear text message was written for you by the sender of this message",
+      "The clear text message below was written for you by the sender of this message",
       "========================================",
-      cleartext
+      cleartext,
+      "\n"
+      "Encrypted message below",
+      "========================================",
+      io.read
     ].join("\n")
-
-    attachment "application/pgp-encrypted" do |a|
-      a.filename = filename + '.gpg' || "secrets.#{Time.now.to_i}.gpg"
-      a.body = io.inject{|m,s| m << s}
-    end
   end
 end
 
@@ -119,9 +124,6 @@ template :form do
   %p
     %label{:style => 'color:red;', :for => 'email'} Email Text (optional - not encrypted):
     %textarea{:style => 'border: solid 1px red;', :name => 'cleartext'}
-  %p
-    %label{:style => 'color:red;', :for => 'email'} Filename for Encrypted Secrets (optional - not encrypted):
-    %input{:style => 'border: 1px solid red;', :type => 'text', :name => 'filename'}
   %p
     %input{:type => 'submit', :value => 'Send Secrets'}
   HAML
