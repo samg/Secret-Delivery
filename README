@@ -1,3 +1,19 @@
+Secret Delivery was conceived as an easy way for clients to transmit server
+passwords and other private credentials to a developer.
+
+It is a simple web application that allows one to send gpg encrypted email
+attachments using only a web browser.  When hosted on an https connection the
+sensitive data is encrypted for it's entire transit through the internet.
+
+Secret Delivery also allows users to import their gpg public key.  Other users
+may then use it to send them encrypted messages. Email is always sent to the
+email address in the selected public key's User ID.
+
+Secret Delivery is Open Source (MIT License) and hosted at
+https://secrets.drasticcode.com.
+
+
+
     ____________________  \
    < neigh, i mean yay! >  \ji
     --------------------\  /.(((
@@ -13,4 +29,3 @@
     [=====================^==============
 ___//_(_)_(_)_(_)___\__/_____(_)_(_)_(_)
 ========================================
-
