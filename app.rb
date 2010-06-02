@@ -21,7 +21,7 @@ post '/deliver' do
     # reject blank params
     params.each { |k,v| params.delete(k) if v.blank? }
 
-    io = IO.popen("gpg -er '#{params['to']}'", "r+")
+    io = IO.popen("gpg -e --trust-model always -r '#{params['to']}'", "r+")
     io.puts params[:secrets]
     io.close_write
     to = params['to'].match(/<(.*)>/)[1] #extract email address
@@ -40,7 +40,7 @@ get '/import' do
 end
 
 post '/import' do
-  keys = system 'gpg', '--recv-keys', params[:keyid]
+  system 'gpg', '--recv-keys', params[:keyid]
   redirect '/'
 end
 
