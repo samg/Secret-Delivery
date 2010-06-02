@@ -24,7 +24,7 @@ post '/deliver' do
     io = IO.popen("gpg -e --armor --trust-model always -r '#{recipient_user_id}'", "r+")
     io.puts params[:secrets]
     io.close_write
-    to = params['to'].match(/<(.*)>/)[1] #extract email address
+    to = recipient_user_id.match(/<(.*)>/)[1] #extract email address
     ApplicationMailer.deliver_secret(params['to'], params[:cleartext], io)
     io.close_read
     redirect "/success/#{to}"
