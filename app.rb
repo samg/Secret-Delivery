@@ -56,7 +56,7 @@ class ApplicationMailer < ActionMailer::Base
     subject         "Secrets"
     from            "secrets@#{`hostname`}"
     body            [
-      "someone has sent you some secrets",
+      "someone has sent you some secrets through http://secrets.drasticcode.com",
       "Use gpg key #{to.inspect} to decrypt it",
       "\n",
       "This clear text message was written for you by the sender of this message",
