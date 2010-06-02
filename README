@@ -2,7 +2,7 @@ Secret Delivery was conceived as an easy way for clients to transmit server
 passwords and other private credentials to a developer.
 
 It is a simple web application that allows one to send gpg encrypted email
-attachments using only a web browser.  When hosted on an https connection the
+messages using only a web browser.  When hosted on an https connection the
 sensitive data is encrypted for its entire transit through the internet.
 
 Secret Delivery also allows users to import their gpg public key.  Other users
