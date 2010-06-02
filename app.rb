@@ -40,7 +40,12 @@ get '/import' do
 end
 
 post '/import' do
-  system 'gpg', '--recv-keys', params[:keyid]
+  unless params[:keyid].to_s == ""
+    system 'gpg', '--recv-keys', params[:keyid]
+  end
+  unless params[:pubkey].to_s == ""
+    IO.popen('gpg --import', 'w'){|io| io.puts params[:pubkey]}
+  end
   redirect '/'
 end
 
@@ -136,10 +141,16 @@ template :import_form do
     %label{:for => 'keyid'} Key Id:
     %input{:type => 'text', :name => 'keyid'}
   %p
+    %strong OR
+    paste your ascii armored public key into the text field below
+  %p
+    %label{:for => 'pubkey'} 
+    %textarea{:name => 'pubkey'}
+  %p
     %input{:type => 'submit', :value => 'Import Key'}
   %p
     %pre
-      = `gpg --list-keys`
+      = h `gpg --list-keys`
   HAML
 end
 
