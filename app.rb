@@ -19,9 +19,9 @@ post '/deliver' do
   else
     # reject blank params
     params.each { |k,v| params.delete(k) if v.blank? }
-    recipient_user_id = uids.detect{|key| key =~ /#{params['to']}/}
+    recipient_user_id = "=" + uids.detect{|key| key =~ /#{params['to']}/}.strip
 
-    io = IO.popen("gpg -e --armor --trust-model always -r '#{recipient_user_id}'"r+")
+    io = IO.popen("gpg -e --armor --trust-model always -r '#{recipient_user_id}'", "r+")
     io.puts params[:secrets]
     io.close_write
     to = params['to'].match(/<(.*)>/)[1] #extract email address
@@ -57,7 +57,8 @@ end
 
 ActionMailer::Base.delivery_method = :sendmail
 class ApplicationMailer < ActionMailer::Base
-  def secret(to, cleartext, filename, io)
+  def secret(to, cleartext, io)
+    secrets = io.read
     recipients      to
     subject         "Secrets"
     from            "secrets@#{`hostname`}"
@@ -68,10 +69,10 @@ class ApplicationMailer < ActionMailer::Base
       "The clear text message below was written for you by the sender of this message",
       "========================================",
       cleartext,
-      "\n"
+      "\n",
       "Encrypted message below",
       "========================================",
-      io.read
+      secrets
     ].join("\n")
   end
 end
